@@ -1,0 +1,200 @@
+import { useState } from "react";
+import type { MasteryLevel } from "../../../types";
+import { useAuth } from "../../../hooks/useAuth";
+import { addMemorizationUnit } from "../services/memorizationService";
+import { useNavigate } from "react-router-dom";
+
+function AddSurahPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [surahName, setSurahName] = useState("");
+  const [surahNumber, setSurahNumber] = useState("");
+  const [juzNumber, setJuzNumber] = useState("");
+  const [memorizedAt, setMemorizedAt] = useState("");
+  const [masteryLevel, setMasteryLevel] = useState<MasteryLevel>("good");
+
+  const [error, setError] = useState("");
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const handleAddAnother = () => {
+    setSurahName("");
+    setSurahNumber("");
+    setJuzNumber("");
+    setMemorizedAt("");
+    setMasteryLevel("good");
+    setError("");
+    setIsSaved(false);
+  };
+  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    if (!surahName.trim()) return setError("يجب أن تدخل اسم السورة");
+    if (!surahNumber) return setError("يجب أن تدخل رقم السورة");
+    if (Number(surahNumber) > 114 || Number(surahNumber) < 1)
+      return setError("يجب إدخال رقم للسورة من 1 إلى 114");
+
+    if (!juzNumber) return setError("يجب أن تدخل رقم الجزء في القرآن");
+    if (Number(juzNumber) > 30 || Number(juzNumber) < 1)
+      return setError("يجب أن يكون رقم الجزء من 1 إلى 30");
+
+    if (!user) {
+      setError("يجب تسجيل الدخول أولًا.");
+      return;
+    }
+    const data = {
+      surahName: surahName.trim(),
+      surahNumber: Number(surahNumber),
+      juzNumber: Number(juzNumber),
+      memorizedAt: memorizedAt || new Date().toISOString(),
+      masteryLevel,
+    };
+    setError("");
+
+    try {
+      setIsSaving(true);
+      await addMemorizationUnit(user.uid, data);
+      setIsSaved(true);
+    } catch (error) {
+      console.error(error);
+      setError("حدث خطأ أثناء حفظ السورة");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  return (
+    <main dir="rtl" className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right">
+      <section className="mx-auto max-w-md">
+        <div className="rounded-3xl bg-linear-to-br from-emerald-700 to-emerald-500 p-6 text-white shadow-lg">
+          <p className="text-sm opacity-90">خطوة جديدة في رحلة الحفظ 🌿</p>
+          <h1 className="mt-3 text-3xl font-bold">إضافة سورة</h1>
+          <p className="mt-3 text-sm leading-6 opacity-90">
+            أضيفي السورة التي حفظتِها حتى يبدأ التطبيق في تنظيم مراجعتها.
+          </p>
+        </div>
+
+        <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
+          {error && (
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+              {error}
+            </div>
+          )}
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-700">
+                اسم السورة
+              </label>
+              <input
+                placeholder="مثال: سورة الملك"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+                value={surahName}
+                onChange={(e) => setSurahName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  رقم السورة
+                </label>
+                <input
+                  type="number"
+                  placeholder="67"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+                  value={surahNumber}
+                  onChange={(e) => setSurahNumber(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  رقم الجزء
+                </label>
+                <input
+                  type="number"
+                  placeholder="29"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+                  value={juzNumber}
+                  onChange={(e) => setJuzNumber(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-700">
+                تاريخ الحفظ
+              </label>
+              <input
+                type="date"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+                value={memorizedAt}
+                onChange={(e) => setMemorizedAt(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-gray-700">
+                مستوى الإتقان الحالي
+              </label>
+              <select
+                value={masteryLevel}
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+                onChange={(e) =>
+                  setMasteryLevel(e.target.value as MasteryLevel)
+                }
+              >
+                <option value="excellent">ممتاز</option>
+                <option value="good">جيد</option>
+                <option value="weak">ضعيف</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+              disabled={isSaving}
+            >
+              {isSaving ? "جارٍ الحفظ..." : "حفظ السورة"}
+            </button>
+          </form>
+          {isSaved && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-5">
+              <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl">
+                  🌿
+                </div>
+
+                <h2 className="mt-4 text-xl font-bold text-gray-800">
+                  تم حفظ السورة بنجاح
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-gray-500">
+                  هل ترغبين في إضافة سورة أخرى أم الرجوع للوحة الرئيسية؟
+                </p>
+
+                <div className="mt-6 space-y-3">
+                  <button
+                    type="button"
+                    className="w-full rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                    onClick={handleAddAnother}
+                  >
+                    نعم، إضافة سورة أخرى
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-full rounded-2xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-200"
+                    onClick={() => navigate("/")}
+                  >
+                    الرجوع للوحة الرئيسية
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}{" "}
+        </section>
+      </section>
+    </main>
+  );
+}
+
+export default AddSurahPage;

@@ -1,0 +1,7 @@
+- GuestRoute for authenticated users
+- PWA support
+- Dark Mode
+- Notifications
+- Smart review algorithm
+- Verse-level revision support
+- Dashboard streak tracking
