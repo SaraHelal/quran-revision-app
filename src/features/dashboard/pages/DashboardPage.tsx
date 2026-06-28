@@ -14,11 +14,16 @@ function DashboardPage() {
   const userName = user?.displayName || "مستخدمة";
 
   const masteryPriority = {
-  weak: 1,
-  good: 2,
-  excellent: 3,
-};
-const prioritySurahs = [...surahs].sort((a,b)=> masteryPriority[a.masteryLevel]-masteryPriority[b.masteryLevel]).slice(0,3)
+    weak: 1,
+    good: 2,
+    excellent: 3,
+  };
+  const prioritySurahs = [...surahs]
+    .sort(
+      (a, b) =>
+        masteryPriority[a.masteryLevel] - masteryPriority[b.masteryLevel],
+    )
+    .slice(0, 3);
   const handleLogout = async () => {
     await logout();
   };
@@ -64,7 +69,7 @@ const prioritySurahs = [...surahs].sort((a,b)=> masteryPriority[a.masteryLevel]-
 
         <div className="mt-5 grid grid-cols-3 gap-3">
           <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-emerald-700">0</p>
+            <p className="text-2xl font-bold text-emerald-700">{prioritySurahs.length}</p>
             <p className="mt-1 text-xs text-gray-500">ورد اليوم</p>
           </div>
 
@@ -80,50 +85,127 @@ const prioritySurahs = [...surahs].sort((a,b)=> masteryPriority[a.masteryLevel]-
         </div>
 
         <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-800">مراجعة اليوم</h2>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
-              لا يوجد ورد
+
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              {prioritySurahs.length === 0
+                ? "لا يوجد ورد"
+                : `${prioritySurahs.length} سور للمراجعة`}
             </span>
-          </div>
-
-          <div className="mt-5 rounded-2xl border border-dashed border-gray-300 p-6 text-center">
-            {prioritySurahs.length === 0 ? (
-              <>
-                <p className="text-4xl">📖</p>
-                <h3 className="mt-3 font-bold text-gray-800">
-                  لا توجد سور بعد
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-500">
-                  أضيفي أول سورة محفوظة ليبدأ التطبيق في تنظيم ورد المراجعة
-                  اليومي.
-                </p>
-              </>
-            ) : 
+          </div> */}
+          <div className="flex items-start justify-between">
             <div>
-              {prioritySurahs.map(item=>(
-                  <p key={item.id}>{item.surahName}</p>
+              <h2 className="text-lg font-bold text-gray-800">مراجعة اليوم</h2>
 
-              ))}
+              <span className="mt-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                {prioritySurahs.length === 0
+                  ? "لا يوجد ورد"
+                  : `${prioritySurahs.length} سور للمراجعة`}
+              </span>
             </div>
-            }
 
             <button
               onClick={handleAddSurah}
-              className="mt-5 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+              className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
             >
               + إضافة سورة
             </button>
           </div>
-        </section>
+          <div className="mt-5">
+            {prioritySurahs.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
+                <p className="text-4xl">📖</p>
 
+                <h3 className="mt-3 font-bold text-gray-800">
+                  لا توجد سور بعد
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-gray-500">
+                  أضيفي أول سورة محفوظة ليبدأ التطبيق في تنظيم ورد المراجعة
+                  اليومي.
+                </p>
+
+                <button
+                  onClick={handleAddSurah}
+                  className="mt-5 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                >
+                  + إضافة سورة
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {prioritySurahs.map((surah) => (
+                  <div
+                    key={surah.id}
+                    className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold text-gray-800">
+                          {surah.surahName}
+                        </h3>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          الجزء {surah.juzNumber} • سورة رقم {surah.surahNumber}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          surah.masteryLevel === "weak"
+                            ? "bg-red-100 text-red-700"
+                            : surah.masteryLevel === "good"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {surah.masteryLevel === "weak"
+                          ? "ضعيف"
+                          : surah.masteryLevel === "good"
+                            ? "جيد"
+                            : "ممتاز"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled
+                      className="mt-4 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm font-bold text-gray-500"
+                    >
+                      المراجعة قريبًا ✨
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
         <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800">السور المحفوظة</h2>
+  <div className="flex items-center gap-3">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
+      📚
+    </div>
 
-          <p className="mt-3 text-sm text-gray-500">
-            ستظهر هنا السور التي قمتِ بإضافتها للمراجعة.
-          </p>
-        </section>
+    <div>
+      <h2 className="text-lg font-bold text-gray-800">
+        إدارة السور المحفوظة
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-500">
+        عرض جميع السور المحفوظة وإدارتها.
+      </p>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    disabled
+    className="mt-5 w-full rounded-2xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-500"
+  >
+    قريبًا ✨
+  </button>
+</section>
       </section>
     </main>
   );
