@@ -10,7 +10,6 @@ function LoginPage() {
   const handleLogin = async () => {
     try {
       const result = await signInWithGoogle();
-      console.log("User:", result.user);
     } catch (error) {
       console.error(error);
     }

@@ -158,6 +158,30 @@ Next milestone:
 * Dashboard Enhancement
 * Add Surah Feature
 
+## Current Version: V1
+
+V1 is now usable for personal Quran revision.
+
+Features:
+
+* Google authentication
+* Add memorized surahs
+* Save data in Firestore
+* Dashboard with Arabic RTL mobile-first UI
+* Suggested review based on weakest surahs
+* Update mastery level after review
+* Save review history
+* Basic review feedback
+
+Planned V2:
+
+* Improved Add Surah form with automatic surah number and juz selection
+* Manage all memorized surahs
+* Review scheduling using nextReviewDate
+* Overdue reviews
+* Review statistics
+* PWA/mobile deployment
+
 ---
 
 Built with ❤️ for every Quran memorizer.

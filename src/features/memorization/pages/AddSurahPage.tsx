@@ -3,14 +3,17 @@ import type { MasteryLevel } from "../../../types";
 import { useAuth } from "../../../hooks/useAuth";
 import { addMemorizationUnit } from "../services/memorizationService";
 import { useNavigate } from "react-router-dom";
-
+import { QURAN_SURAHS } from "../../../constants/quranSurahs";
+const getTodayDateInputValue = () => {
+  return new Date().toISOString().split("T")[0];
+};
 function AddSurahPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [surahName, setSurahName] = useState("");
   const [surahNumber, setSurahNumber] = useState("");
   const [juzNumber, setJuzNumber] = useState("");
-  const [memorizedAt, setMemorizedAt] = useState("");
+  const [memorizedAt, setMemorizedAt] = useState(getTodayDateInputValue());
   const [masteryLevel, setMasteryLevel] = useState<MasteryLevel>("good");
 
   const [error, setError] = useState("");
@@ -21,21 +24,15 @@ function AddSurahPage() {
     setSurahName("");
     setSurahNumber("");
     setJuzNumber("");
-    setMemorizedAt("");
+    setMemorizedAt(getTodayDateInputValue());
     setMasteryLevel("good");
     setError("");
     setIsSaved(false);
   };
+
   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (!surahName.trim()) return setError("يجب أن تدخل اسم السورة");
-    if (!surahNumber) return setError("يجب أن تدخل رقم السورة");
-    if (Number(surahNumber) > 114 || Number(surahNumber) < 1)
-      return setError("يجب إدخال رقم للسورة من 1 إلى 114");
-
-    if (!juzNumber) return setError("يجب أن تدخل رقم الجزء في القرآن");
-    if (Number(juzNumber) > 30 || Number(juzNumber) < 1)
-      return setError("يجب أن يكون رقم الجزء من 1 إلى 30");
 
     if (!user) {
       setError("يجب تسجيل الدخول أولًا.");
@@ -66,7 +63,9 @@ function AddSurahPage() {
       <section className="mx-auto max-w-md">
         <div className="rounded-3xl bg-linear-to-br from-emerald-700 to-emerald-500 p-6 text-white shadow-lg">
           <p className="text-sm opacity-90">خطوة جديدة في رحلة الحفظ 🌿</p>
-          <h1 className="mt-3 text-3xl font-bold">إضافة سورة</h1>
+          <div className="mb-5 flex items-center gap-3">
+            <h1 className="text-3xl font-bold">إضافة سورة</h1>
+          </div>{" "}
           <p className="mt-3 text-sm leading-6 opacity-90">
             أضيفي السورة التي حفظتِها حتى يبدأ التطبيق في تنظيم مراجعتها.
           </p>
@@ -79,18 +78,35 @@ function AddSurahPage() {
             </div>
           )}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="mb-2 block text-sm font-bold text-gray-700">
-                اسم السورة
-              </label>
-              <input
-                placeholder="مثال: سورة الملك"
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
-                value={surahName}
-                onChange={(e) => setSurahName(e.target.value)}
-              />
-            </div>
+            <div className="relative">
+              <select
+                value={surahNumber}
+                onChange={(e) => {
+                  const selectedSurah = QURAN_SURAHS.find(
+                    (surah) => surah.number === Number(e.target.value),
+                  );
 
+                  if (!selectedSurah) return;
+
+                  setSurahName(selectedSurah.name);
+                  setSurahNumber(String(selectedSurah.number));
+                  setJuzNumber(String(selectedSurah.juzNumber));
+                }}
+                className="w-full appearance-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:border-emerald-500"
+              >
+                <option value="">اختاري السورة</option>
+
+                {QURAN_SURAHS.map((surah) => (
+                  <option key={surah.number} value={surah.number}>
+                    سورة {surah.name}
+                  </option>
+                ))}
+              </select>
+
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                ▼
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-2 block text-sm font-bold text-gray-700">
@@ -98,10 +114,9 @@ function AddSurahPage() {
                 </label>
                 <input
                   type="number"
-                  placeholder="67"
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
                   value={surahNumber}
-                  onChange={(e) => setSurahNumber(e.target.value)}
+                  readOnly
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-500 outline-none"
                 />
               </div>
 
@@ -111,14 +126,12 @@ function AddSurahPage() {
                 </label>
                 <input
                   type="number"
-                  placeholder="29"
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
                   value={juzNumber}
-                  onChange={(e) => setJuzNumber(e.target.value)}
+                  readOnly
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-500 outline-none"
                 />
               </div>
             </div>
-
             <div>
               <label className="mb-2 block text-sm font-bold text-gray-700">
                 تاريخ الحفظ
@@ -130,31 +143,50 @@ function AddSurahPage() {
                 onChange={(e) => setMemorizedAt(e.target.value)}
               />
             </div>
-
             <div>
-              <label className="mb-2 block text-sm font-bold text-gray-700">
+              <label className="mb-3 block text-sm font-bold text-gray-700">
                 مستوى الإتقان الحالي
               </label>
-              <select
-                value={masteryLevel}
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500"
-                onChange={(e) =>
-                  setMasteryLevel(e.target.value as MasteryLevel)
-                }
-              >
-                <option value="excellent">ممتاز</option>
-                <option value="good">جيد</option>
-                <option value="weak">ضعيف</option>
-              </select>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
-              disabled={isSaving}
-            >
-              {isSaving ? "جارٍ الحفظ..." : "حفظ السورة"}
-            </button>
+              <div className="flex gap-2">
+                {(["weak", "good", "excellent"] as const).map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setMasteryLevel(level)}
+                    className={`flex-1 rounded-full border px-4 py-3 text-sm font-medium transition ${
+                      masteryLevel === level
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {level === "weak"
+                      ? "ضعيف"
+                      : level === "good"
+                        ? "جيد"
+                        : "ممتاز"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+               <button
+                type="submit"
+                disabled={isSaving}
+                className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {isSaving ? "جاري الحفظ..." : "حفظ السورة"}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard")}
+                className="rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50"
+              >
+                العودة
+              </button>
+
+             
+            </div>{" "}
           </form>
           {isSaved && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-5">

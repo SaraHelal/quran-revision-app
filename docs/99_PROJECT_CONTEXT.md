@@ -145,3 +145,136 @@ If this project continues in a new ChatGPT conversation, start by sharing this f
 The assistant should act as a Tech Lead and guide the developer step by step, explaining decisions and reviewing code like a real project.
 
 
+## V1 Completed
+
+The app now supports a usable first version.
+
+Implemented in V1:
+
+* Google Sign In
+* Logout
+* Protected routes
+* Arabic RTL mobile-first Dashboard
+* Dynamic user name in Dashboard
+* Add Surah page
+* Save memorized surahs to Firestore `memorizationUnits`
+* Fetch user memorized surahs from Firestore
+* Show total memorized surahs count
+* Show today’s suggested review items
+* Prioritize weaker surahs first:
+
+  * weak
+  * good
+  * excellent
+* Update mastery level after review
+* Save review history to Firestore `reviewHistory`
+* Show review success feedback message
+* Replace “Overdue” stat with “Weak” count for V1
+* Add placeholder card for future “Manage Memorized Surahs”
+
+## V1 Firestore Collections
+
+### users
+
+Stores authenticated users.
+
+### memorizationUnits
+
+Stores user memorized surahs and their current revision state.
+
+Important fields:
+
+* userId
+* surahName
+* surahNumber
+* juzNumber
+* memorizedAt
+* masteryLevel
+* masteryScore
+* lastReviewDate
+* nextReviewDate
+* createdAt
+* updatedAt
+
+### reviewHistory
+
+Stores every review action.
+
+Important fields:
+
+* userId
+* memorizationUnitId
+* reviewDate
+* result
+* scoreAfterReview
+* createdAt
+
+## Current Dashboard Logic
+
+Dashboard fetches the current user’s memorization units from Firestore.
+
+Stats:
+
+* ورد اليوم = number of current suggested review items
+* ضعيف = number of weak surahs
+* محفوظ = total memorized surahs
+
+Today’s review currently prioritizes weaker surahs first using:
+
+weak = 1
+good = 2
+excellent = 3
+
+Only the top 3 are shown in V1.
+
+## Current Review Logic
+
+When the user selects a review result:
+
+* The memorization unit masteryLevel is updated.
+* lastReviewDate is updated.
+* updatedAt is updated.
+* A new reviewHistory document is created.
+* Dashboard reloads the updated surahs.
+
+## Next V2 Ideas
+
+* Better Add Surah UX:
+
+  * Select surah from a dropdown.
+  * Auto-fill surah number.
+  * Auto-fill juz number.
+  * Optionally filter surahs by juz.
+* Manage Memorized Surahs page.
+* Real nextReviewDate scheduling.
+* Overdue reviews.
+* Review statistics.
+* Streak days.
+* PWA/mobile deployment.
+## Deferred Improvements
+
+### Prevent Duplicate Surahs
+
+Problem:
+The user can currently add the same surah more than once.
+
+Desired behavior:
+Before creating a new memorizationUnit, check if a document already exists for:
+
+* userId
+* surahNumber
+
+If the surah already exists:
+
+* Do not create a new document.
+* Show a friendly message:
+
+"هذه السورة مضافة بالفعل 🌿"
+
+Implementation idea:
+Add the duplicate check inside:
+
+src/features/memorization/services/memorizationService.ts
+
+Reason for postponing:
+The current V1 is already usable, and duplicate prevention can safely be added in V2 without affecting the existing data model.

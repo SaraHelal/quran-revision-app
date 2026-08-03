@@ -64,3 +64,12 @@
 * Multiple memorization plans
 * Arabic & English support
 * Family accounts
+
+V2
+├── Prevent duplicate surahs
+├── nextReviewDate algorithm
+├── overdue reviews
+├── manage memorized surahs
+├── review statistics
+├── streak days
+└── PWA/mobile install
