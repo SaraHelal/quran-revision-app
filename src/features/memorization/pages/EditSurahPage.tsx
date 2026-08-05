@@ -66,21 +66,24 @@ function EditSurahPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!unitId) {
-      setError("تعذر تحديد السورة المطلوبة.");
+    if (!user || !unitId) {
+      setError("تعذر تحديد المستخدم أو السورة المطلوبة.");
       return;
     }
 
     try {
       setIsSaving(true);
       setError("");
-
-      await updateMemorizationUnit(unitId, {
+      await updateMemorizationUnit(user.uid, unitId, {
         memorizedAt: formData.memorizedAt,
         masteryLevel: formData.masteryLevel,
       });
 
-      navigate("/my-surahs");
+      navigate("/my-surahs", {
+        state: {
+          successMessage: "تم حفظ التعديلات بنجاح.",
+        },
+      });
     } catch (error) {
       console.error(error);
       setError("حدث خطأ أثناء حفظ التعديلات.");
@@ -88,12 +91,8 @@ function EditSurahPage() {
       setIsSaving(false);
     }
   };
-
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right"
-    >
+    <main dir="rtl" className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right">
       <section className="mx-auto max-w-md">
         <div className="rounded-3xl bg-linear-to-br from-emerald-700 to-emerald-500 p-6 text-white shadow-lg">
           <p className="text-sm opacity-90">تحديث بيانات الحفظ 🌿</p>
@@ -142,8 +141,8 @@ function EditSurahPage() {
                 </p>
 
                 <p className="mt-3 text-xs leading-5 text-gray-400">
-                  بيانات السورة ثابتة. إذا أُضيفت سورة بالخطأ، احذفيها ثم
-                  أضيفي السورة الصحيحة.
+                  بيانات السورة ثابتة. إذا أُضيفت سورة بالخطأ، احذفيها ثم أضيفي
+                  السورة الصحيحة.
                 </p>
               </div>
 

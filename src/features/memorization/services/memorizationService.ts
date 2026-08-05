@@ -31,7 +31,7 @@ export async function addMemorizationUnit(
     limit(1),
   );
   const duplicateSnapshot = await getDocs(duplicateQuery);
-   if (!duplicateSnapshot.empty) {
+  if (!duplicateSnapshot.empty) {
     throw new Error("DUPLICATE_SURAH");
   }
   const docRef = await addDoc(collection(db, COLLECTIONS.MEMORIZATION_UNITS), {
@@ -124,10 +124,22 @@ type UpdateMemorizationUnitData = {
 };
 
 export async function updateMemorizationUnit(
+  userId: string,
   unitId: string,
   data: UpdateMemorizationUnitData,
 ) {
   const unitRef = doc(db, COLLECTIONS.MEMORIZATION_UNITS, unitId);
+  const unitSnapshot = await getDoc(unitRef);
+
+  if (!unitSnapshot.exists()) {
+    throw new Error("Memorization unit not found");
+  }
+
+  const unit = unitSnapshot.data() as MemorizationUnit;
+
+  if (unit.userId !== userId) {
+    throw new Error("Unauthorized update attempt");
+  }
 
   await updateDoc(unitRef, {
     ...data,

@@ -6,11 +6,12 @@ import {
 } from "../services/memorizationService";
 import type { MemorizationUnit } from "../../../types";
 import { logout } from "../../../services/firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function MySurahsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [surahs, setSurahs] = useState<MemorizationUnit[]>([]);
   const [surahToDelete, setSurahToDelete] = useState<MemorizationUnit | null>(
     null,
@@ -77,6 +78,18 @@ function MySurahsPage() {
 
     loadSurahs(user.uid);
   }, [user]);
+  useEffect(() => {
+  const message = location.state?.successMessage;
+
+  if (!message) return;
+
+  setSuccessMessage(message);
+
+  navigate(location.pathname, {
+    replace: true,
+    state: null,
+  });
+}, [location.pathname, location.state, navigate]);
   return (
     <main className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right" dir="rtl">
       <section className="mx-auto max-w-md">
