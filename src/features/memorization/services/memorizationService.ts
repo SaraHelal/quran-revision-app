@@ -13,6 +13,7 @@ import {
   getDoc,
   query,
   updateDoc,
+  writeBatch,
   where,
 } from "firebase/firestore";
 import { MASTERY_SCORES } from "../../../constants/mastery";
@@ -123,4 +124,39 @@ export async function updateMemorizationUnit(
     masteryScore: MASTERY_SCORES[data.masteryLevel],
     updatedAt: new Date().toISOString(),
   });
+}
+
+export async function deleteMemorizationUnit(
+  userId: string,
+  unitId: string,
+) {
+  const unitRef = doc(db, COLLECTIONS.MEMORIZATION_UNITS, unitId);
+  const unitSnapshot = await getDoc(unitRef);
+
+  if (!unitSnapshot.exists()) {
+    throw new Error("Memorization unit not found");
+  }
+
+  const unit = unitSnapshot.data() as MemorizationUnit;
+
+  if (unit.userId !== userId) {
+    throw new Error("Unauthorized deletion attempt");
+  }
+
+  const historyQuery = query(
+    collection(db, COLLECTIONS.REVIEW_HISTORY),
+    where("userId", "==", userId),
+    where("memorizationUnitId", "==", unitId),
+  );
+
+  const historySnapshot = await getDocs(historyQuery);
+  const batch = writeBatch(db);
+
+  historySnapshot.docs.forEach((historyDocument) => {
+    batch.delete(historyDocument.ref);
+  });
+
+  batch.delete(unitRef);
+
+  await batch.commit();
 }

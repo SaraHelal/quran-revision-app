@@ -1,187 +1,66 @@
-# 📖 Quran Revision App
+# Quran Revision App
 
-A modern Quran revision application designed to help Quran memorizers organize, track, and improve their revision journey.
+A mobile-first web application that helps Arabic-speaking users organise Quran memorisation and maintain a consistent revision routine.
 
-This project is built as a real-world product using modern frontend technologies and software engineering best practices.
+The interface is intentionally Arabic-first and right-to-left (RTL). The project documentation and codebase use English to support collaboration, maintainability, portfolio presentation, and technical interviews.
 
----
+## Project Status
 
-# Project Goal
+**V2 is currently in development.**
 
-The application helps Quran memorizers:
+The core application is working. Current development focuses on managing memorised surahs and expanding the revision workflow.
 
-* Organize memorized surahs.
-* Track daily revision.
-* Identify weak surahs.
-* Build a consistent revision habit.
-* Preserve memorization over time.
+## Technology Stack
 
----
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Firebase Authentication
+- Cloud Firestore
 
-# Tech Stack
+## Completed Features
 
-## Frontend
+- [x] Sign in with Google
+- [x] Create and load user-specific data
+- [x] Protect authenticated routes
+- [x] Display an Arabic RTL dashboard
+- [x] Add a memorised surah with input validation
+- [x] Display the current user's memorised surahs
+- [x] Select three priority surahs for revision
+- [x] Record a revision result and update mastery data
+- [x] Delete a surah through a confirmation modal
+- [x] Prevent duplicate deletion requests
+- [x] Update the list immediately after successful deletion
+- [x] Display a success message that disappears automatically
+- [x] Persist deletion in Cloud Firestore
 
-* React 19
-* TypeScript
-* Vite
-* Tailwind CSS
+## In Progress
 
-## Backend
+- [ ] Edit a surah's mastery level from the **My Surahs** page
+- [ ] Edit a surah's memorisation date
+- [ ] Review the complete page on mobile devices
 
-* Firebase Authentication
-* Cloud Firestore
+## Planned Features
 
-## Future
+- Revision by juz or ayah range
+- Spaced revision scheduling with `nextReviewDate`
+- Revision history and progress statistics
+- Daily revision streak
+- Weekly summary and planning
+- English localisation
 
-* React Router
-* React Context
-* Progressive Web App (PWA)
-* Firebase Cloud Messaging
-* AI-powered Smart Review
+## Product and Engineering Decisions
 
----
+- The application UI is Arabic-first because the initial target users are Arabic speakers.
+- Project documentation, identifiers, and technical communication use English.
+- The interface is designed mobile-first and enhanced for larger screens.
+- Firestore stores persistent user data; local React state provides immediate interface updates.
+- Potentially destructive actions require explicit confirmation.
+- Features are implemented and tested incrementally to keep the code easy to review.
 
-# Current Project Status
+## Documentation
 
-## ✅ Completed
-
-## Completed
-
-- React + TypeScript + Vite setup
-- Tailwind CSS configuration
-- Firebase Authentication (Google Sign-In)
-- Cloud Firestore setup
-- Project folder architecture
-- Custom useAuth hook
-- Protected Routes
-- React Router configuration
-- Login page
-- Dashboard page
-- Arabic RTL support
-- Mobile-first Dashboard UI
-- Initial project documentation
----
-
-# Project Structure
-
-```text
-src
-│
-├── assets
-├── components
-├── constants
-├── features
-│   ├── auth
-│   ├── dashboard
-│   ├── memorization
-│   └── reviews
-│
-├── hooks
-├── layouts
-├── pages
-├── services
-│   └── firebase
-│
-├── types
-└── utils
-```
-
----
-
-# Documentation
-
-Project documentation is located inside:
-
-```text
-docs/
-```
-
-Including:
-
-* Project Vision
-* Roadmap
-* Architecture
-* Database Design
-* Decisions
-* Sessions
-* Learning Log
-
----
-
-# Development Philosophy
-
-This project follows a real software engineering workflow:
-
-1. Problem First
-2. UX/UI Design
-3. Architecture
-4. Database Design
-5. Development
-6. Testing
-7. Documentation
-
----
-
-# Development Environment
-
-| Tool         | Version    |
-| ------------ | ---------- |
-| Node.js      | 24.x       |
-| React        | 19         |
-| TypeScript   | 5.x        |
-| Vite         | 8.x        |
-| Tailwind CSS | Latest     |
-| Firebase     | Latest SDK |
-
----
-
-# Project Principles
-
-* Clean Code
-* Scalable Architecture
-* Reusable Components
-* Strong Type Safety
-* Documentation First
-* GitHub Portfolio Quality
-
----
-
-# Current Milestone
-
-We are currently completing **Version 1.0 (MVP)**.
-
-Next milestone:
-
-* React Router
-* Protected Routes
-* Dashboard Enhancement
-* Add Surah Feature
-
-## Current Version: V1
-
-V1 is now usable for personal Quran revision.
-
-Features:
-
-* Google authentication
-* Add memorized surahs
-* Save data in Firestore
-* Dashboard with Arabic RTL mobile-first UI
-* Suggested review based on weakest surahs
-* Update mastery level after review
-* Save review history
-* Basic review feedback
-
-Planned V2:
-
-* Improved Add Surah form with automatic surah number and juz selection
-* Manage all memorized surahs
-* Review scheduling using nextReviewDate
-* Overdue reviews
-* Review statistics
-* PWA/mobile deployment
-
----
-
-Built with ❤️ for every Quran memorizer.
+- [`docs/02_V2_ROADMAP.md`](docs/02_V2_ROADMAP.md) â€” V2 phases, progress, and next tasks
+- [`docs/99_PROJECT_CONTEXT.md`](docs/99_PROJECT_CONTEXT.md) â€” product context, architecture, data models, implementation notes, and current status

@@ -1,304 +1,115 @@
-# Quran Revision App - Project Context
+# Quran Revision App — Project Context
 
-## Project Name
+**Last updated:** 5 August 2026  
+**Current version:** V2 — In progress
 
-Quran Revision App
+## Product Goal
 
-## Project Purpose
+The Quran Revision App helps users organise Quran memorisation and maintain a consistent revision routine. The product is designed for Arabic-speaking users, so the application interface is Arabic-first, right-to-left (RTL), responsive, and mobile-first. English localisation is planned for a later version.
 
-This app helps Quran memorizers organize and track their revision, especially when they start forgetting which surahs are becoming weak or have not been reviewed recently.
+## Development Workflow
 
-The idea came from a real personal problem: Quran revision can become random and hard to manage as memorization grows. The goal is to help the developer first, then help other Quran memorizers build a consistent revision habit.
+Features are developed using the following workflow:
 
-## Current Tech Stack
+1. Define the problem.
+2. Design the user experience.
+3. Review architecture and data requirements.
+4. Implement the feature in small, testable steps.
+5. Review and refactor the code.
+6. Update project documentation.
+
+The current architecture is preserved unless a change provides a clear benefit. Unnecessary complexity and premature abstraction are avoided.
+
+## Technology Stack
 
 - React
 - TypeScript
 - Vite
 - Tailwind CSS
+- React Router
 - Firebase Authentication
 - Cloud Firestore
 
-## Current Architecture
-
-The project is organized using a feature-based structure.
-
-```text
-src
-├── assets
-├── components
-├── constants
-├── features
-│   ├── auth
-│   ├── dashboard
-│   ├── memorization
-│   └── reviews
-├── hooks
-├── layouts
-├── pages
-├── services
-│   └── firebase
-├── types
-└── utils
-
-Firebase Setup
-
-Firebase has been created and connected.
-
-Enabled services:
-
-Google Authentication
-Firestore Database
-
-Firestore collections planned:
-
-users
-memorizationUnits
-reviewHistory
-Completed So Far
-Created React project using Vite
-Added TypeScript
-Installed Tailwind CSS
-Created project folder structure
-Created TypeScript types
-Created Firebase constants
-Created Firebase project
-Enabled Google Authentication
-Created Firestore Database
-Connected Firebase SDK
-Implemented Google Sign-In
-Saved new users automatically to Firestore
-Created basic Dashboard page
-Created initial documentation files
-Important Decisions
-Decision 1: Start with Web App / PWA
-
-We decided to start with a React web app using Vite because it is faster, simpler, and works well on mobile browsers. Later, the app can become a PWA or be rebuilt in React Native if needed.
-
-Decision 2: Use Firebase
-
-Firebase is used as the backend because it provides Authentication and Firestore quickly without building a custom backend.
-
-Decision 3: Start with Surah-level Revision
-
-The MVP will start with full-surah revision because it is simpler. The database is still designed with the name memorizationUnits so we can later support ayah ranges or pages.
-
-Decision 4: Documentation-first workflow
-
-We are documenting the project as we build it so the project can be resumed easily in any future chat or development session.
-
-Current MVP
-
-Version 1.0 focuses on:
-
-Google Sign In
-Logout
-Dashboard
-Add Surah
-Display memorized surahs
-Today’s revision
-Save review result
-Save review history
-
-## Current Status
-
-Authentication and Routing foundations are complete.
-
-Implemented:
-
-- Google Authentication
-- Firestore
-- useAuth Hook
-- React Router
-- ProtectedRoute
-- Nested Routes
-- Login Redirect
-- Dashboard Redirect
-- Mobile-first Dashboard UI
-
-Current Focus:
-Dashboard improvements and Add Surah feature.
-
-
-Next Steps
-Add React Router
-Create app layout
-Add protected routes
-Improve Dashboard
-Add Logout
-Build Add Surah feature
-Working Style
-
-The project is being built like a real software engineering project:
-
-Understand the problem
-Design the UX
-Design the data
-Write the types
-Build the feature
-Review the code
-Update documentation
-Notes for Future Chat
-
-If this project continues in a new ChatGPT conversation, start by sharing this file.
-
-The assistant should act as a Tech Lead and guide the developer step by step, explaining decisions and reviewing code like a real project.
-
-
-## V1 Completed
-
-The app now supports a usable first version.
-
-Implemented in V1:
-
-* Google Sign In
-* Logout
-* Protected routes
-* Arabic RTL mobile-first Dashboard
-* Dynamic user name in Dashboard
-* Add Surah page
-* Save memorized surahs to Firestore `memorizationUnits`
-* Fetch user memorized surahs from Firestore
-* Show total memorized surahs count
-* Show today’s suggested review items
-* Prioritize weaker surahs first:
-
-  * weak
-  * good
-  * excellent
-* Update mastery level after review
-* Save review history to Firestore `reviewHistory`
-* Show review success feedback message
-* Replace “Overdue” stat with “Weak” count for V1
-* Add placeholder card for future “Manage Memorized Surahs”
-
-## V1 Firestore Collections
-
-### users
-
-Stores authenticated users.
-
-### memorizationUnits
-
-Stores user memorized surahs and their current revision state.
-
-Important fields:
-
-* userId
-* surahName
-* surahNumber
-* juzNumber
-* memorizedAt
-* masteryLevel
-* masteryScore
-* lastReviewDate
-* nextReviewDate
-* createdAt
-* updatedAt
-
-### reviewHistory
-
-Stores every review action.
-
-Important fields:
-
-* userId
-* memorizationUnitId
-* reviewDate
-* result
-* scoreAfterReview
-* createdAt
-
-## Current Dashboard Logic
-
-Dashboard fetches the current user’s memorization units from Firestore.
-
-Stats:
-
-* ورد اليوم = number of current suggested review items
-* ضعيف = number of weak surahs
-* محفوظ = total memorized surahs
-
-Today’s review currently prioritizes weaker surahs first using:
-
-weak = 1
-good = 2
-excellent = 3
-
-Only the top 3 are shown in V1.
-
-## Current Review Logic
-
-When the user selects a review result:
-
-* The memorization unit masteryLevel is updated.
-* lastReviewDate is updated.
-* updatedAt is updated.
-* A new reviewHistory document is created.
-* Dashboard reloads the updated surahs.
-
-## Next V2 Ideas
-
-* Better Add Surah UX:
-
-  * Select surah from a dropdown.
-  * Auto-fill surah number.
-  * Auto-fill juz number.
-  * Optionally filter surahs by juz.
-* Manage Memorized Surahs page.
-* Real nextReviewDate scheduling.
-* Overdue reviews.
-* Review statistics.
-* Streak days.
-* PWA/mobile deployment.
-## Deferred Improvements
-
-### Prevent Duplicate Surahs
-
-Problem:
-The user can currently add the same surah more than once.
-
-Desired behavior:
-Before creating a new memorizationUnit, check if a document already exists for:
-
-* userId
-* surahNumber
-
-If the surah already exists:
-
-* Do not create a new document.
-* Show a friendly message:
-
-"هذه السورة مضافة بالفعل 🌿"
-
-Implementation idea:
-Add the duplicate check inside:
-
-src/features/memorization/services/memorizationService.ts
-
-Reason for postponing:
-The current V1 is already usable, and duplicate prevention can safely be added in V2 without affecting the existing data model.
-
-
-## Version 2
-
-Version 2 planning has started.
-
-The full V2 roadmap is documented in:
-
-`docs/02_V2_ROADMAP.md`
-
-V2 focuses on building an Adaptive Review Engine, including:
-
-* Manage memorized surahs
-* Prevent duplicate surahs
-* Review scheduling with `nextReviewDate`
-* Overdue reviews
-* Priority scoring
-* Recommendation reasons
-* Statistics and charts
-* Smart / AI-powered personalized review recommendations
-
-The main product goal for V2 is:
-
-"Help the user know what to revise today, in what priority, and why."
+## Core Data Models
+
+### `MemorizationUnit`
+
+- `id`
+- `userId`
+- `surahNumber`
+- `surahName`
+- `juzNumber`
+- `masteryLevel`
+- `masteryScore`
+- `lastReviewDate`
+- `nextReviewDate`
+- `createdAt`
+- `updatedAt`
+
+### `ReviewHistory`
+
+- `id`
+- `userId`
+- `memorizationUnitId`
+- `reviewDate`
+- `result`
+- `scoreAfterReview`
+- `createdAt`
+
+## Completed Features
+
+- [x] Google authentication and user document creation
+- [x] Protected application routes
+- [x] Arabic RTL dashboard
+- [x] Mobile-first responsive interface
+- [x] Add a memorised surah with input validation
+- [x] Display the authenticated user's memorised surahs
+- [x] Select three priority surahs based on mastery level
+- [x] Record a revision result and refresh the related data
+- [x] Restrict users to their own data through Firestore Security Rules
+- [x] Delete a memorised surah safely
+
+## Delete Surah Feature
+
+**Status:** Complete and verified
+
+### Behaviour
+
+- A delete action selects the target surah without deleting it immediately.
+- A confirmation modal displays the selected surah name dynamically.
+- The modal explains that the deleted surah cannot be restored through the interface.
+- The user can confirm or cancel the action.
+- Both modal buttons are disabled while the Firestore request is in progress.
+- The confirm button displays a loading message during deletion.
+- After a successful request, the deleted item is removed from local state immediately.
+- A success message includes the deleted surah name.
+- The success message disappears automatically after three seconds.
+- Errors are shown to the user and logged for debugging.
+
+### Implementation Notes
+
+- The service deletes the Firestore document using the authenticated `userId` and the memorisation unit `id`.
+- The event handler is passed as `onClick={handleConfirmDelete}` because it does not require arguments.
+- The modal overlay uses `bg-black/50`, which applies transparency only to the background.
+- `isDeleting` prevents duplicate requests and keeps modal state consistent.
+- A `useEffect` creates the success-message timer and clears it during cleanup.
+- Local state is updated after Firestore succeeds, providing immediate UI feedback while Firestore remains the persistent data source.
+
+### Verification
+
+- [x] The correct surah name appears in the confirmation modal.
+- [x] Cancel closes the modal without deleting data.
+- [x] Confirm deletes the document from Firestore.
+- [x] The item disappears from the interface immediately.
+- [x] The success message appears and disappears after three seconds.
+- [x] The deleted item remains absent after a browser refresh.
+
+## Current Focus
+
+The **My Surahs** page currently supports loading, empty, error, list, success, and safe deletion states.
+
+Next planned work:
+
+1. Edit a surah's mastery level.
+2. Edit its memorisation date.
+3. Review the complete page experience on mobile devices.

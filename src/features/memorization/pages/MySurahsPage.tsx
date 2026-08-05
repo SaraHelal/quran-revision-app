@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { getUserMemorizationUnits } from "../services/memorizationService";
+import {
+  getUserMemorizationUnits,
+  deleteMemorizationUnit,
+} from "../services/memorizationService";
 import type { MemorizationUnit } from "../../../types";
 import { logout } from "../../../services/firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +12,11 @@ function MySurahsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [surahs, setSurahs] = useState<MemorizationUnit[]>([]);
+  const [surahToDelete, setSurahToDelete] = useState<MemorizationUnit | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string>("");
   const [error, setError] = useState("");
   const userName = user?.displayName || "مستخدمة";
   const handleBackToDashboard = () => {
@@ -19,10 +27,30 @@ function MySurahsPage() {
   };
 
   const handleEdit = (unitId: string) => {
-    navigate(`/edit-surah/${unitId}`)
+    navigate(`/edit-surah/${unitId}`);
   };
-  const handleDelete = (unitId: string) => {
-    console.log("Delete ", unitId);
+  const handleDelete = (unit: MemorizationUnit) => {
+    setSurahToDelete(unit);
+    setError("");
+    setSuccessMessage("");
+  };
+  const handleConfirmDelete = async () => {
+    if (!user || !surahToDelete) return;
+    try {
+      setIsDeleting(true);
+      setError("");
+      await deleteMemorizationUnit(user.uid, surahToDelete.id);
+      setSurahs((currentSurahs) =>
+        currentSurahs.filter((item) => item.id !== surahToDelete.id),
+      );
+      setSuccessMessage(`تم حذف سورة ${surahToDelete.surahName} بنجاح.`);
+      setSurahToDelete(null);
+    } catch (error) {
+      setError("حدث خطأ أثناء حذف السورة. حاولي مرة أخرى.");
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
   const handleAddSurah = () => {
     navigate("/add-surah");
@@ -37,6 +65,13 @@ function MySurahsPage() {
       setError("حدث خطأ أثناء تحميل السور");
     }
   };
+  useEffect(() => {
+    if (!successMessage) return
+    const timer = setTimeout(()=>{
+      setSuccessMessage("")
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [successMessage])
   useEffect(() => {
     if (!user) return;
 
@@ -71,7 +106,11 @@ function MySurahsPage() {
             تابعي مراجعتك اليومية وحافظي على ما تم حفظه من القرآن الكريم.
           </p>
         </div>
-
+        {successMessage && (
+          <p className="mb-4 mt-4 rounded-xl bg-green-100 p-3 text-center text-sm font-medium text-green-700">
+            {successMessage}
+          </p>
+        )}
         <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
@@ -162,7 +201,7 @@ function MySurahsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(surah.id)}
+                          onClick={() => handleDelete(surah)}
                           className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 shadow-sm transition   hover:border-red-200 hover:bg-red-50"
                         >
                           حذف
@@ -176,6 +215,36 @@ function MySurahsPage() {
           </div>
         </section>
       </section>
+
+      {surahToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow p-4">
+            <p> هل أنتِ متأكدة من حذف سورة {surahToDelete.surahName}؟</p>
+            <p className="mt-2 text-sm text-gray-500 text-center">
+              لن تتمكني من استعادة السورة بعد حذفها.
+            </p>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                className="flex-1 rounded-2xl bg-red-500 py-3 font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "جارٍ حذف السورة..." : "حذف السورة"}
+              </button>
+
+              <button
+                type="button"
+                className="flex-1 rounded-2xl bg-gray-100 py-3 font-bold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => setSurahToDelete(null)}
+                disabled={isDeleting}
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
