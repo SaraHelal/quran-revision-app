@@ -30,8 +30,8 @@
 - [x] Display a success message containing the surah name
 - [x] Hide the success message automatically after three seconds
 - [x] Verify that deleted data remains absent after refresh
-- [ ] Edit a surah's mastery level
-- [ ] Edit a surah's memorisation date
+- [x] Edit a surah's mastery level
+- [x] Edit a surah's memorisation date
 - [ ] Review accessibility and mobile usability for the complete page## Phase 2 — Spaced Revision System
 
 **Status:** Planned
