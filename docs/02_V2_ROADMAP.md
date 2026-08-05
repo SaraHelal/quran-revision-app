@@ -19,6 +19,9 @@
 
 - [x] Display the authenticated user's memorised surahs
 - [x] Display loading, error, and empty states
+- [x] Prevent adding the same surah more than once for the same user
+- [x] Display a specific error message when the surah already exists
+- [x] Hide form error messages automatically after three seconds
 - [x] Open a confirmation modal before deletion
 - [x] Display the selected surah name in the modal
 - [x] Delete the surah from Cloud Firestore
@@ -29,9 +32,7 @@
 - [x] Verify that deleted data remains absent after refresh
 - [ ] Edit a surah's mastery level
 - [ ] Edit a surah's memorisation date
-- [ ] Review accessibility and mobile usability for the complete page
-
-## Phase 2 — Spaced Revision System
+- [ ] Review accessibility and mobile usability for the complete page## Phase 2 — Spaced Revision System
 
 **Status:** Planned
 

@@ -11,10 +11,11 @@ import {
   doc,
   getDocs,
   getDoc,
+  limit,
   query,
+  where,
   updateDoc,
   writeBatch,
-  where,
 } from "firebase/firestore";
 import { MASTERY_SCORES } from "../../../constants/mastery";
 
@@ -23,7 +24,16 @@ export async function addMemorizationUnit(
   data: CreateMemorizationUnitData,
 ) {
   const now = new Date().toISOString();
-
+  const duplicateQuery = query(
+    collection(db, COLLECTIONS.MEMORIZATION_UNITS),
+    where("userId", "==", userId),
+    where("surahNumber", "==", data.surahNumber),
+    limit(1),
+  );
+  const duplicateSnapshot = await getDocs(duplicateQuery);
+   if (!duplicateSnapshot.empty) {
+    throw new Error("DUPLICATE_SURAH");
+  }
   const docRef = await addDoc(collection(db, COLLECTIONS.MEMORIZATION_UNITS), {
     userId,
     ...data,
@@ -126,10 +136,7 @@ export async function updateMemorizationUnit(
   });
 }
 
-export async function deleteMemorizationUnit(
-  userId: string,
-  unitId: string,
-) {
+export async function deleteMemorizationUnit(userId: string, unitId: string) {
   const unitRef = doc(db, COLLECTIONS.MEMORIZATION_UNITS, unitId);
   const unitSnapshot = await getDoc(unitRef);
 

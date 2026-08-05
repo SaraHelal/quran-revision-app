@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MasteryLevel } from "../../../types";
 import { useAuth } from "../../../hooks/useAuth";
 import { addMemorizationUnit } from "../services/memorizationService";
@@ -53,11 +53,25 @@ function AddSurahPage() {
       setIsSaved(true);
     } catch (error) {
       console.error(error);
-      setError("حدث خطأ أثناء حفظ السورة");
+
+      if (error instanceof Error && error.message === "DUPLICATE_SURAH") {
+        setError("هذه السورة مضافة بالفعل إلى قائمة سورك.");
+      } else {
+        setError("حدث خطأ أثناء حفظ السورة.");
+      }
     } finally {
       setIsSaving(false);
     }
   };
+  useEffect(() => {
+  if (!error) return;
+
+  const timer = setTimeout(() => {
+    setError("");
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [error]);
   return (
     <main dir="rtl" className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right">
       <section className="mx-auto max-w-md">
@@ -73,7 +87,7 @@ function AddSurahPage() {
 
         <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
           {error && (
-            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+            <div className="mt-4 mb-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
               {error}
             </div>
           )}
@@ -170,7 +184,7 @@ function AddSurahPage() {
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3">
-               <button
+              <button
                 type="submit"
                 disabled={isSaving}
                 className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
@@ -184,8 +198,6 @@ function AddSurahPage() {
               >
                 العودة
               </button>
-
-             
             </div>{" "}
           </form>
           {isSaved && (
