@@ -9,7 +9,7 @@ function LoginPage() {
   if (user) return <Navigate to="/dashboard" replace />;
   const handleLogin = async () => {
     try {
-      const result = await signInWithGoogle();
+      await signInWithGoogle();
     } catch (error) {
       console.error(error);
     }

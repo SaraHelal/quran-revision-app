@@ -278,3 +278,27 @@ src/features/memorization/services/memorizationService.ts
 
 Reason for postponing:
 The current V1 is already usable, and duplicate prevention can safely be added in V2 without affecting the existing data model.
+
+
+## Version 2
+
+Version 2 planning has started.
+
+The full V2 roadmap is documented in:
+
+`docs/02_V2_ROADMAP.md`
+
+V2 focuses on building an Adaptive Review Engine, including:
+
+* Manage memorized surahs
+* Prevent duplicate surahs
+* Review scheduling with `nextReviewDate`
+* Overdue reviews
+* Priority scoring
+* Recommendation reasons
+* Statistics and charts
+* Smart / AI-powered personalized review recommendations
+
+The main product goal for V2 is:
+
+"Help the user know what to revise today, in what priority, and why."

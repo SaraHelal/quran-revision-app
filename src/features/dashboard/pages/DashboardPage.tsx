@@ -14,7 +14,7 @@ function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [surahs, setSurahs] = useState<MemorizationUnit[]>([]);
-  const [error, setError] = useState("");
+  const [, setError] = useState("");
   const [reviewMessage, setReviewMessage] = useState("");
   const userName = user?.displayName || "مستخدمة";
 
@@ -29,6 +29,9 @@ function DashboardPage() {
   ).length;
   const handleLogout = async () => {
     await logout();
+  };
+  const handleMySurahs = () => {
+    navigate("/my-surahs");
   };
   const handleAddSurah = () => {
     navigate("/add-surah");
@@ -62,8 +65,6 @@ function DashboardPage() {
   };
   useEffect(() => {
     if (!user) return;
-
-    const userId = user.uid;
 
     loadSurahs(user.uid);
   }, [user]);
@@ -243,10 +244,10 @@ function DashboardPage() {
 
           <button
             type="button"
-            disabled
-            className="mt-5 w-full rounded-2xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-500"
+            onClick={handleMySurahs}
+            className="mt-5 w-full rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
           >
-            قريبًا ✨
+            عرض السور المحفوظة
           </button>
         </section>
       </section>
