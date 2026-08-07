@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import {
   getUserMemorizationUnits,
@@ -19,6 +19,10 @@ function MySurahsPage() {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [error, setError] = useState("");
+
+  const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const deleteTriggerRef = useRef<HTMLElement | null>(null);
+
   const userName = user?.displayName || "مستخدمة";
   const handleBackToDashboard = () => {
     navigate("/dashboard");
@@ -31,6 +35,7 @@ function MySurahsPage() {
     navigate(`/edit-surah/${unitId}`);
   };
   const handleDelete = (unit: MemorizationUnit) => {
+    deleteTriggerRef.current = document.activeElement as HTMLElement;
     setSurahToDelete(unit);
     setError("");
     setSuccessMessage("");
@@ -67,29 +72,56 @@ function MySurahsPage() {
     }
   };
   useEffect(() => {
-    if (!successMessage) return
-    const timer = setTimeout(()=>{
-      setSuccessMessage("")
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [successMessage])
+    if (!successMessage) return;
+    const timer = setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
   useEffect(() => {
     if (!user) return;
 
     loadSurahs(user.uid);
   }, [user]);
   useEffect(() => {
-  const message = location.state?.successMessage;
+    const message = location.state?.successMessage;
 
-  if (!message) return;
+    if (!message) return;
 
-  setSuccessMessage(message);
+    setSuccessMessage(message);
 
-  navigate(location.pathname, {
-    replace: true,
-    state: null,
-  });
-}, [location.pathname, location.state, navigate]);
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (!surahToDelete) return;
+
+    cancelDeleteButtonRef.current?.focus();
+
+    return () => {
+      deleteTriggerRef.current?.focus();
+    };
+  }, [surahToDelete]);
+
+  useEffect(() => {
+    if (!surahToDelete) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isDeleting) {
+        setSurahToDelete(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [surahToDelete, isDeleting]);
+
   return (
     <main className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right" dir="rtl">
       <section className="mx-auto max-w-md">
@@ -230,32 +262,57 @@ function MySurahsPage() {
       </section>
 
       {surahToDelete && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl shadow p-4">
-            <p> هل أنتِ متأكدة من حذف سورة {surahToDelete.surahName}؟</p>
-            <p className="mt-2 text-sm text-gray-500 text-center">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isDeleting) {
+              setSurahToDelete(null);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+            className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl"
+          >
+            <p
+              id="delete-dialog-title"
+              className="text-center text-base font-bold leading-7 text-gray-800"
+            >
+              هل أنتِ متأكدة من حذف سورة{" "}
+              <span className="text-red-600">{surahToDelete.surahName}</span>؟
+            </p>
+
+            <p
+              id="delete-dialog-description"
+              className="mt-2 text-center text-sm leading-6 text-gray-500"
+            >
               لن تتمكني من استعادة السورة بعد حذفها.
             </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
+
+            <div className="mt-5 flex gap-3">
               <button
                 type="button"
-                className="flex-1 rounded-2xl bg-red-500 py-3 font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
+                className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isDeleting ? "جارٍ حذف السورة..." : "حذف السورة"}
+                {isDeleting ? "جارٍ الحذف..." : "حذف السورة"}
               </button>
 
               <button
+                ref={cancelDeleteButtonRef}
                 type="button"
-                className="flex-1 rounded-2xl bg-gray-100 py-3 font-bold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => setSurahToDelete(null)}
                 disabled={isDeleting}
+                className="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 إلغاء
               </button>
             </div>
-          </div>
+          </div>{" "}
         </div>
       )}
     </main>

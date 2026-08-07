@@ -106,14 +106,21 @@ function EditSurahPage() {
 
         <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
           {isLoading && (
-            <p className="text-center text-sm text-gray-500">
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-center text-sm text-gray-500"
+            >
               جاري تحميل بيانات السورة...
             </p>
           )}
 
           {!isLoading && error && !surah && (
             <div>
-              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+              <p
+                role="alert"
+                className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
+              >
                 {error}
               </p>
 
@@ -168,40 +175,48 @@ function EditSurahPage() {
                 />
               </div>
 
-              <div>
-                <p className="mb-3 text-sm font-bold text-gray-700">
+              <fieldset>
+                <legend className="mb-3 text-sm font-bold text-gray-700">
                   مستوى الإتقان الحالي
-                </p>
+                </legend>
 
                 <div className="flex gap-2">
-                  {(["weak", "good", "excellent"] as const).map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          masteryLevel: level,
-                        }))
-                      }
-                      className={`flex-1 rounded-full border px-3 py-3 text-sm font-medium transition ${
-                        formData.masteryLevel === level
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {level === "weak"
-                        ? "ضعيف"
-                        : level === "good"
-                          ? "جيد"
-                          : "ممتاز"}
-                    </button>
-                  ))}
+                  {(["weak", "good", "excellent"] as const).map((level) => {
+                    const isSelected = formData.masteryLevel === level;
+
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            masteryLevel: level,
+                          }))
+                        }
+                        className={`flex-1 rounded-full border px-3 py-3 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+                          isSelected
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {level === "weak"
+                          ? "ضعيف"
+                          : level === "good"
+                            ? "جيد"
+                            : "ممتاز"}
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
+              </fieldset>
 
               {error && (
-                <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                <p
+                  role="alert"
+                  className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
+                >
                   {error}
                 </p>
               )}
