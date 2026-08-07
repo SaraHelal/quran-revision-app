@@ -19,7 +19,7 @@ function MySurahsPage() {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [error, setError] = useState("");
-
+  const [isLoading, setIsLoading] = useState(true);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
   const deleteTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -63,12 +63,16 @@ function MySurahsPage() {
   };
   const loadSurahs = async (userId: string) => {
     try {
+      setIsLoading(true);
       setError("");
+
       const result = await getUserMemorizationUnits(userId);
       setSurahs(result);
     } catch (error) {
       console.error(error);
-      setError("حدث خطأ أثناء تحميل السور");
+      setError("حدث خطأ أثناء تحميل السور.");
+    } finally {
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -152,7 +156,11 @@ function MySurahsPage() {
           </p>
         </div>
         {successMessage && (
-          <p className="mb-4 mt-4 rounded-xl bg-green-100 p-3 text-center text-sm font-medium text-green-700">
+          <p
+            role="status"
+            aria-live="polite"
+            className="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700"
+          >
             {successMessage}
           </p>
         )}
@@ -161,9 +169,11 @@ function MySurahsPage() {
             <div>
               <h2 className="text-lg font-bold text-gray-800">قائمة السور</h2>
               <span className="mt-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                {surahs.length === 0
-                  ? "لا توجد سور"
-                  : `${surahs.length} سور محفوظة`}
+                {isLoading
+                  ? "جاري التحميل..."
+                  : surahs.length === 0
+                    ? "لا توجد سور"
+                    : `${surahs.length} سور محفوظة`}
               </span>
             </div>
             <button
@@ -174,13 +184,24 @@ function MySurahsPage() {
             </button>
           </div>
           {error && (
-            <span className="mt-5 block rounded-2xl bg-red-50 p-4 text-center text-sm font-bold text-red-600">
+            <p
+              role="alert"
+              className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
+            >
               {error}
-            </span>
+            </p>
           )}
 
           <div className="mt-5">
-            {surahs.length === 0 ? (
+            {isLoading ? (
+              <p
+                role="status"
+                aria-live="polite"
+                className="py-8 text-center text-sm text-gray-500"
+              >
+                جاري تحميل السور...
+              </p>
+            ) : surahs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
                 <p className="text-4xl">📖</p>
 
@@ -264,7 +285,7 @@ function MySurahsPage() {
       {surahToDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5"
-          onMouseDown={(event) => {
+          onPointerDown={(event) => {
             if (event.target === event.currentTarget && !isDeleting) {
               setSurahToDelete(null);
             }

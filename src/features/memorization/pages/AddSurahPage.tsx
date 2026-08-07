@@ -64,14 +64,14 @@ function AddSurahPage() {
     }
   };
   useEffect(() => {
-  if (!error) return;
+    if (!error) return;
 
-  const timer = setTimeout(() => {
-    setError("");
-  }, 3000);
+    const timer = setTimeout(() => {
+      setError("");
+    }, 3000);
 
-  return () => clearTimeout(timer);
-}, [error]);
+    return () => clearTimeout(timer);
+  }, [error]);
   return (
     <main dir="rtl" className="min-h-screen bg-[#F4F7F2] px-5 py-6 text-right">
       <section className="mx-auto max-w-md">
@@ -92,8 +92,11 @@ function AddSurahPage() {
             </div>
           )}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="relative">
+            <div className="relative min-w-0">
               <select
+                id="surah"
+                dir="rtl"
+                aria-label="اختيار السورة"
                 value={surahNumber}
                 onChange={(e) => {
                   const selectedSurah = QURAN_SURAHS.find(
@@ -106,7 +109,7 @@ function AddSurahPage() {
                   setSurahNumber(String(selectedSurah.number));
                   setJuzNumber(String(selectedSurah.juzNumber));
                 }}
-                className="w-full appearance-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:border-emerald-500"
+                className="w-full min-w-0 appearance-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-right text-sm outline-none focus:border-emerald-500"
               >
                 <option value="">اختاري السورة</option>
 
@@ -116,7 +119,6 @@ function AddSurahPage() {
                   </option>
                 ))}
               </select>
-
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">
                 ▼
               </span>

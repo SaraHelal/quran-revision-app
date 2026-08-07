@@ -1,6 +1,6 @@
 # Quran Revision App — V2 Roadmap
 
-**Last updated:** 5 August 2026  
+**Last updated:** 7 August 2026  
 **Status:** In progress
 
 ## V2 Principles
@@ -15,7 +15,7 @@
 
 ## Phase 1 — Manage Memorised Surahs
 
-**Status:** In progress
+**Status:** Completed
 
 - [x] Display the authenticated user's memorised surahs
 - [x] Display loading, error, and empty states
@@ -32,10 +32,13 @@
 - [x] Verify that deleted data remains absent after refresh
 - [x] Edit a surah's mastery level
 - [x] Edit a surah's memorisation date
-- [ ] Review accessibility and mobile usability for the complete page## Phase 2 — Spaced Revision System
+- [x] Review accessibility and mobile usability for the complete page
+
+## Phase 2 — Review Scheduling Engine
 
 **Status:** Planned
 
+- [ ] Define review intervals for each mastery level
 - [ ] Calculate `nextReviewDate` from the latest revision result
 - [ ] Prioritise today's reviews by due date and mastery level
 - [ ] Support revision by juz or ayah range, not only by complete surah
@@ -64,4 +67,4 @@
 
 ## Next Task
 
-Design and implement mastery-level editing on the **My Surahs** page. Verify that the updated value is stored in Cloud Firestore and remains correct after refreshing the browser.
+Define and document the review intervals for each mastery level before implementing the `nextReviewDate` calculation.
