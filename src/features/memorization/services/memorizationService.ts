@@ -18,7 +18,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { MASTERY_SCORES } from "../../../constants/mastery";
-
+import { calculateNextReviewDate } from "../../reviews/utils/reviewSchedule";
 export async function addMemorizationUnit(
   userId: string,
   data: CreateMemorizationUnitData,
@@ -37,28 +37,11 @@ export async function addMemorizationUnit(
   const docRef = await addDoc(collection(db, COLLECTIONS.MEMORIZATION_UNITS), {
     userId,
     ...data,
-    masteryScore: 0,
+    masteryScore: MASTERY_SCORES[data.masteryLevel],
     lastReviewDate: null,
-    nextReviewDate: null,
+    nextReviewDate: now,
     createdAt: now,
     updatedAt: now,
-  });
-
-  return docRef.id;
-}
-export async function addReviewHistory(
-  userId: string,
-  unitId: string,
-  masteryLevel: MasteryLevel,
-) {
-  const now = new Date().toISOString();
-  const docRef = await addDoc(collection(db, COLLECTIONS.REVIEW_HISTORY), {
-    userId,
-    memorizationUnitId: unitId,
-    reviewDate: now,
-    result: masteryLevel,
-    scoreAfterReview: MASTERY_SCORES[masteryLevel],
-    createdAt: now,
   });
 
   return docRef.id;
@@ -80,21 +63,7 @@ export async function getUserMemorizationUnits(
 
   return units;
 }
-export async function updateMemorizationUnitReview(
-  _userId: string,
-  unitId: string,
-  masteryLevel: MasteryLevel,
-) {
-  const unitRef = doc(db, COLLECTIONS.MEMORIZATION_UNITS, unitId);
-  const now = new Date().toISOString();
 
-  await updateDoc(unitRef, {
-    masteryLevel,
-    masteryScore: MASTERY_SCORES[masteryLevel],
-    lastReviewDate: now,
-    updatedAt: now,
-  });
-}
 export async function getMemorizationUnitById(
   userId: string,
   unitId: string,
@@ -117,6 +86,61 @@ export async function getMemorizationUnitById(
 
   return unit;
 }
+
+
+
+export async function completeMemorizationUnitReview(
+  userId: string,
+  unitId: string,
+  masteryLevel: MasteryLevel,
+) {
+  const unitRef = doc(db, COLLECTIONS.MEMORIZATION_UNITS, unitId);
+  const unitSnapshot = await getDoc(unitRef);
+
+  if (!unitSnapshot.exists()) {
+    throw new Error("Memorization unit not found");
+  }
+
+  const unit = unitSnapshot.data() as MemorizationUnit;
+
+  if (unit.userId !== userId) {
+    throw new Error("Unauthorized review attempt");
+  }
+
+  const reviewedAt = new Date();
+  const reviewDate = reviewedAt.toISOString();
+  const nextReviewDate = calculateNextReviewDate(
+    masteryLevel,
+    reviewedAt,
+  );
+  const masteryScore = MASTERY_SCORES[masteryLevel];
+
+  const historyRef = doc(
+    collection(db, COLLECTIONS.REVIEW_HISTORY),
+  );
+
+  const batch = writeBatch(db);
+
+  batch.update(unitRef, {
+    masteryLevel,
+    masteryScore,
+    lastReviewDate: reviewDate,
+    nextReviewDate,
+    updatedAt: reviewDate,
+  });
+
+  batch.set(historyRef, {
+    userId,
+    memorizationUnitId: unitId,
+    reviewDate,
+    result: masteryLevel,
+    scoreAfterReview: masteryScore,
+    createdAt: reviewDate,
+  });
+
+  await batch.commit();
+}
+
 
 type UpdateMemorizationUnitData = {
   memorizedAt: string;
@@ -179,3 +203,4 @@ export async function deleteMemorizationUnit(userId: string, unitId: string) {
 
   await batch.commit();
 }
+

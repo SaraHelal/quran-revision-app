@@ -1,7 +1,4 @@
-export type MasteryLevel =
-| "excellent"
-| "good"
-| "weak";
+export type MasteryLevel = "excellent" | "good" | "weak";
 
 export interface MemorizationUnit {
   id: string;
@@ -24,39 +21,36 @@ export interface MemorizationUnit {
 }
 
 export interface CreateMemorizationUnitData {
-    surahNumber: number;
-    surahName: string;
-    juzNumber: number;
-    memorizedAt: string;
-    masteryLevel: MasteryLevel;
+  surahNumber: number;
+  surahName: string;
+  juzNumber: number;
+  memorizedAt: string;
+  masteryLevel: MasteryLevel;
 }
 
 export interface AppUser {
-uid: string;
-displayName: string;
-email: string;
-photoURL: string | null;
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string | null;
 
-createdAt: string;
-updatedAt: string;
+  createdAt: string;
+  updatedAt: string;
 
-totalSurahs: number;
-streakDays: number;
+  totalSurahs: number;
+  streakDays: number;
 }
 
-export type ReviewResult =
-| "excellent"
-| "good"
-| "weak";
+export type ReviewResult = MasteryLevel;
 
 export interface ReviewHistory {
-id: string;
-userId: string;
-memorizationUnitId: string;
+  id: string;
+  userId: string;
+  memorizationUnitId: string;
 
-reviewDate: string;
-result: ReviewResult;
-scoreAfterReview: number;
+  reviewDate: string;
+  result: ReviewResult;
+  scoreAfterReview: number;
 
-createdAt: string;
+  createdAt: string;
 }
