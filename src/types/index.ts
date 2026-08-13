@@ -1,5 +1,5 @@
 export type MasteryLevel = "excellent" | "good" | "weak";
-
+export type ReviewStatus = "overdue" | "dueToday" | "upcoming" | "notScheduled";
 export interface MemorizationUnit {
   id: string;
   userId: string;
