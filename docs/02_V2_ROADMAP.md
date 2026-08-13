@@ -1,6 +1,6 @@
 # Quran Revision App — V2 Roadmap
 
-**Last updated:** 7 August 2026  
+**Last updated:** 13 August 2026  
 **Status:** In progress
 
 ## V2 Principles
@@ -36,24 +36,36 @@
 
 ## Phase 2 — Review Scheduling Engine
 
-**Status:** Planned
+**Status:** In progress
 
-- [ ] Define review intervals for each mastery level
-- [ ] Calculate `nextReviewDate` from the latest revision result
-- [ ] Prioritise today's reviews by due date and mastery level
-- [ ] Support revision by juz or ayah range, not only by complete surah
-- [ ] Store each completed revision in `ReviewHistory`
-- [ ] Distinguish overdue, due today, and upcoming revisions
+- [x] Define review intervals for each mastery level: weak 1 day, good 3 days, and excellent 7 days
+- [x] Calculate `nextReviewDate` from the latest review result
+- [x] Schedule reviews from the start of the target local calendar day
+- [x] Treat a missing or invalid `nextReviewDate` as immediately due
+- [x] Store each completed review in `ReviewHistory`
+- [x] Update mastery level, mastery score, last review date, and next review date after completion
+- [x] Restore and display an unfinished review session
+- [x] Allow the user to continue or cancel an unfinished review
+- [x] Prevent conflicting review sessions with `ReviewConflictModal`
+- [x] Order due reviews by `nextReviewDate`, mastery level, `lastReviewDate`, and surah number
+- [x] Display the complete due count while showing reviews progressively
+- [x] Allow the user to start an early review for any memorised surah
+- [x] Filter manual review choices by surah name and available juz
+- [x] Display manual review results progressively for larger collections
+- [x] Distinguish no saved surahs, no due reviews, and no matching manual results
+- [x] Verify suggested reviews, manual reviews, filters, progressive display, and review conflicts
+- [ ] Display overdue, due-today, and upcoming labels in the interface
+- [ ] Support review by juz or ayah range, not only by complete surah
 
 ## Phase 3 — Progress and Motivation
 
 **Status:** Planned
 
-- [ ] Add revision history
+- [ ] Add review history
 - [ ] Add progress statistics
-- [ ] Add a daily revision streak
+- [ ] Add a daily review streak
 - [ ] Add a weekly summary
-- [ ] Support weekly revision-plan adjustments
+- [ ] Support weekly review-plan adjustments
 
 ## Phase 4 — Product Improvements
 
@@ -63,8 +75,9 @@
 - [ ] Improve accessibility across the application
 - [ ] Improve loading and error states on remaining pages
 - [ ] Complete end-to-end testing
+- [ ] Review bundle size and introduce code splitting where it provides a clear benefit
 - [ ] Review performance and prepare the production release
 
 ## Next Task
 
-Define and document the review intervals for each mastery level before implementing the `nextReviewDate` calculation.
+Add clear overdue, due-today, and upcoming review labels while preserving the existing priority order.

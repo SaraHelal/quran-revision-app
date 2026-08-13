@@ -45,6 +45,10 @@ function DashboardPage() {
   const [reviewMode, setReviewMode] = useState<"suggested" | "manual">(
     "suggested",
   );
+  const [visibleDueCount, setVisibleDueCount] = useState(3);
+  const [visibleManualCount, setVisibleManualCount] = useState(5);
+  const [surahSearch, setSurahSearch] = useState("");
+  const [selectedJuz, setSelectedJuz] = useState<"all" | number>("all");
   const userName = user?.displayName || "مستخدمة";
 
   // Orders every due surah by due date, mastery, last review, then surah number.
@@ -74,11 +78,37 @@ function DashboardPage() {
 
       return a.surahNumber - b.surahNumber;
     });
+  const visibleDueSurahs = dueSurahs.slice(0, visibleDueCount);
 
-  // Shows every saved surah, with the most recently added first.
-  const manualReviewSurahs = [...surahs].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  // Shows how many due surahs are still hidden.
+  const remainingDueCount = Math.max(dueSurahs.length - visibleDueCount, 0);
+  const normalizedSearch = surahSearch.trim().toLowerCase();
+
+  const filteredManualSurahs = [...surahs]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .filter((surah) => {
+      const matchesJuz =
+        selectedJuz === "all" || surah.juzNumber === selectedJuz;
+
+      const matchesSearch = surah.surahName
+        .toLowerCase()
+        .includes(normalizedSearch);
+
+      return matchesJuz && matchesSearch;
+    });
+
+  const visibleManualSurahs = filteredManualSurahs.slice(0, visibleManualCount);
+  const remainingManualCount = Math.max(
+    filteredManualSurahs.length - visibleManualCount,
+    0,
   );
+
+  const availableJuzNumbers = [
+    ...new Set(surahs.map((surah) => surah.juzNumber)),
+  ].sort((a, b) => a - b);
 
   // Counts the surahs currently marked as weak.
   const weakSurahsCount = surahs.filter(
@@ -339,18 +369,14 @@ function DashboardPage() {
                 )
               ) : (
                 <div>
-                  <p className="mb-3 text-xs text-gray-500">
-                    اسحبي لعرض جميع السور المستحقة
-                  </p>
-
                   <div
-                    className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3"
+                    className="space-y-3"
                     aria-label="السور المستحقة للمراجعة"
                   >
-                    {dueSurahs.map((surah) => (
+                    {visibleDueSurahs.map((surah) => (
                       <div
                         key={surah.id}
-                        className="w-[88%] shrink-0 snap-start rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
+                        className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -394,9 +420,36 @@ function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                  {dueSurahs.length > 3 && (
+                    <div className="mt-4 flex gap-2">
+                      {remainingDueCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setVisibleDueCount((currentCount) =>
+                              Math.min(currentCount + 3, dueSurahs.length),
+                            )
+                          }
+                          className="flex-1 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50"
+                        >
+                          عرض المزيد ({remainingDueCount})
+                        </button>
+                      )}
+
+                      {visibleDueCount > 3 && (
+                        <button
+                          type="button"
+                          onClick={() => setVisibleDueCount(3)}
+                          className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+                        >
+                          عرض أقل
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
-            ) : manualReviewSurahs.length === 0 ? (
+            ) : surahs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
                 <p className="text-4xl">📖</p>
 
@@ -405,8 +458,7 @@ function DashboardPage() {
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-gray-500">
-                  أضيفي أول سورة محفوظة ليبدأ التطبيق في تنظيم ورد المراجعة
-                  اليومي.
+                  أضيفي أول سورة محفوظة لتتمكني من اختيارها للمراجعة.
                 </p>
 
                 <button
@@ -418,76 +470,173 @@ function DashboardPage() {
                 </button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-center">
-                <div
-                  className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-sm"
-                  aria-hidden="true"
-                >
-                  📖
+              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-5">
+                <div className="text-center">
+                  <div
+                    className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-sm"
+                    aria-hidden="true"
+                  >
+                    📖
+                  </div>
+
+                  <h3 className="mt-4 font-bold text-gray-800">
+                    اختاري سورة للمراجعة
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
+                    يمكنكِ مراجعة أي سورة محفوظة، حتى إذا لم يحن موعد مراجعتها
+                    بعد.
+                  </p>
                 </div>
 
-                <h3 className="mt-4 font-bold text-gray-800">
-                  اختاري سورة للمراجعة
-                </h3>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-gray-700">
+                      ابحثي باسم السورة
+                    </span>
 
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
-                  يمكنكِ مراجعة أي سورة محفوظة، حتى إذا لم يحن موعد مراجعتها
-                  بعد.
-                </p>
-                <p className="mt-4 text-xs text-gray-500">
-                  اسحبي لعرض جميع السور المحفوظة
-                </p>
+                    <input
+                      type="search"
+                      value={surahSearch}
+                      onChange={(event) => {
+                        setSurahSearch(event.target.value);
+                        setVisibleManualCount(5);
+                      }}
+                      placeholder="مثال: الأنعام"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                  </label>
 
-                <div
-                  className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 text-right"
-                  aria-label="السور المتاحة للمراجعة"
-                >
-                  {manualReviewSurahs.map((surah) => (
-                    <div
-                      key={surah.id}
-                      className="w-[88%] shrink-0 snap-start rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm"
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-bold text-gray-700">
+                      اختاري الجزء
+                    </span>
+
+                    <select
+                      value={selectedJuz}
+                      onChange={(event) => {
+                        setSelectedJuz(
+                          event.target.value === "all"
+                            ? "all"
+                            : Number(event.target.value),
+                        );
+                        setVisibleManualCount(5);
+                      }}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-bold text-gray-800">
-                            {surah.surahName}
-                          </h3>
+                      <option value="all">كل الأجزاء</option>
 
-                          <p className="mt-1 text-xs text-gray-500">
-                            الجزء {surah.juzNumber} • سورة رقم{" "}
-                            {surah.surahNumber}
-                          </p>
-                        </div>
+                      {availableJuzNumbers.map((juzNumber) => (
+                        <option key={juzNumber} value={juzNumber}>
+                          الجزء {juzNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-bold ${
-                            surah.masteryLevel === "weak"
-                              ? "bg-red-100 text-red-700"
-                              : surah.masteryLevel === "good"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-emerald-100 text-emerald-700"
-                          }`}
-                        >
-                          {surah.masteryLevel === "weak"
-                            ? "ضعيف"
-                            : surah.masteryLevel === "good"
-                              ? "جيد"
-                              : "ممتاز"}
-                        </span>
-                      </div>
+                <div className="mt-5">
+                  <p className="mb-3 text-sm text-gray-500">
+                    {filteredManualSurahs.length === 1
+                      ? "سورة واحدة مطابقة"
+                      : `${filteredManualSurahs.length} سور مطابقة`}
+                  </p>
 
-                      <div className="mt-5 flex justify-start">
-                        <button
-                          type="button"
-                          onClick={() => handleStartReview(surah.id)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
-                        >
-                          <span>ابدئي المراجعة</span>
-                          <span aria-hidden="true">←</span>
-                        </button>
-                      </div>
+                  {filteredManualSurahs.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center">
+                      <p className="text-3xl" aria-hidden="true">
+                        🔍
+                      </p>
+
+                      <h4 className="mt-3 font-bold text-gray-800">
+                        لا توجد سورة مطابقة
+                      </h4>
+
+                      <p className="mt-2 text-sm leading-6 text-gray-500">
+                        جرّبي تغيير اسم السورة أو اختيار جزء آخر.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-3">
+                      {visibleManualSurahs.map((surah) => (
+                        <div
+                          key={surah.id}
+                          className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h4 className="font-bold text-gray-800">
+                                {surah.surahName}
+                              </h4>
+
+                              <p className="mt-1 text-xs text-gray-500">
+                                الجزء {surah.juzNumber} • سورة رقم{" "}
+                                {surah.surahNumber}
+                              </p>
+                            </div>
+
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                                surah.masteryLevel === "weak"
+                                  ? "bg-red-100 text-red-700"
+                                  : surah.masteryLevel === "good"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-emerald-100 text-emerald-700"
+                              }`}
+                            >
+                              {surah.masteryLevel === "weak"
+                                ? "ضعيف"
+                                : surah.masteryLevel === "good"
+                                  ? "جيد"
+                                  : "ممتاز"}
+                            </span>
+                          </div>
+
+                          <div className="mt-5 flex justify-start">
+                            <button
+                              type="button"
+                              onClick={() => handleStartReview(surah.id)}
+                              className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                            >
+                              <span>ابدئي المراجعة</span>
+                              <span aria-hidden="true">←</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {filteredManualSurahs.length > 5 && (
+                        <div className="mt-4 flex gap-2">
+                          {remainingManualCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVisibleManualCount((currentCount) =>
+                                  Math.min(
+                                    currentCount + 5,
+                                    filteredManualSurahs.length,
+                                  ),
+                                )
+                              }
+                              className="flex-1 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50"
+                            >
+                              عرض المزيد ({remainingManualCount})
+                            </button>
+                          )}
+
+                          {visibleManualCount > 5 && (
+                            <button
+                              type="button"
+                              onClick={() => setVisibleManualCount(5)}
+                              className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+                            >
+                              عرض أقل
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

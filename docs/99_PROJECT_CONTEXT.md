@@ -1,11 +1,13 @@
 # Quran Revision App — Project Context
 
-**Last updated:** 5 August 2026  
-**Current version:** V2 — In progress
+**Last updated:** 13 August 2026  
+**Current version:** V2 — Phase 2 in progress
 
 ## Product Goal
 
-The Quran Revision App helps users organise Quran memorisation and maintain a consistent revision routine. The product is designed for Arabic-speaking users, so the application interface is Arabic-first, right-to-left (RTL), responsive, and mobile-first. English localisation is planned for a later version.
+The Quran Revision App helps users organise Quran memorisation and maintain a consistent review routine. The product is designed for Arabic-speaking users, so the application interface is Arabic-first, right-to-left (RTL), responsive, and mobile-first. English localisation is planned for a later version.
+
+The current product experience combines automated review recommendations with user choice. The application identifies due surahs and orders them by priority, while still allowing the user to review any memorised surah early.
 
 ## Development Workflow
 
@@ -39,6 +41,7 @@ The current architecture is preserved unless a change provides a clear benefit. 
 - `surahNumber`
 - `surahName`
 - `juzNumber`
+- `memorizedAt`
 - `masteryLevel`
 - `masteryScore`
 - `lastReviewDate`
@@ -56,60 +59,110 @@ The current architecture is preserved unless a change provides a clear benefit. 
 - `scoreAfterReview`
 - `createdAt`
 
-## Completed Features
+## Completed Foundation
 
 - [x] Google authentication and user document creation
 - [x] Protected application routes
 - [x] Arabic RTL dashboard
 - [x] Mobile-first responsive interface
 - [x] Add a memorised surah with input validation
-- [x] Display the authenticated user's memorised surahs
-- [x] Select three priority surahs based on mastery level
-- [x] Record a revision result and refresh the related data
+- [x] Prevent duplicate memorisation units
+- [x] Display, edit, and safely delete memorised surahs
 - [x] Restrict users to their own data through Firestore Security Rules
-- [x] Delete a memorised surah safely
+- [x] Display loading, error, empty, success, and confirmation states
 
-## Delete Surah Feature
+## Review Scheduling Engine
 
-**Status:** Complete and verified
+**Status:** Implemented and verified for complete-surah reviews
 
-### Behaviour
+### Review intervals
 
-- A delete action selects the target surah without deleting it immediately.
-- A confirmation modal displays the selected surah name dynamically.
-- The modal explains that the deleted surah cannot be restored through the interface.
-- The user can confirm or cancel the action.
-- Both modal buttons are disabled while the Firestore request is in progress.
-- The confirm button displays a loading message during deletion.
-- After a successful request, the deleted item is removed from local state immediately.
-- A success message includes the deleted surah name.
-- The success message disappears automatically after three seconds.
-- Errors are shown to the user and logged for debugging.
+The current scheduling intervals are:
 
-### Implementation Notes
+| Mastery level | Next review |
+| --- | ---: |
+| Weak | 1 day |
+| Good | 3 days |
+| Excellent | 7 days |
 
-- The service deletes the Firestore document using the authenticated `userId` and the memorisation unit `id`.
-- The event handler is passed as `onClick={handleConfirmDelete}` because it does not require arguments.
-- The modal overlay uses `bg-black/50`, which applies transparency only to the background.
-- `isDeleting` prevents duplicate requests and keeps modal state consistent.
-- A `useEffect` creates the success-message timer and clears it during cleanup.
-- Local state is updated after Firestore succeeds, providing immediate UI feedback while Firestore remains the persistent data source.
+`nextReviewDate` is scheduled at the start of the target local calendar day and stored as an ISO UTC timestamp. A missing or invalid next-review date is treated as immediately due.
 
-### Verification
+### Due-review priority
 
-- [x] The correct surah name appears in the confirmation modal.
-- [x] Cancel closes the modal without deleting data.
-- [x] Confirm deletes the document from Firestore.
-- [x] The item disappears from the interface immediately.
-- [x] The success message appears and disappears after three seconds.
-- [x] The deleted item remains absent after a browser refresh.
+Due surahs are ordered using the following deterministic priority:
+
+1. Oldest `nextReviewDate` first.
+2. Weakest `masteryLevel` when due dates are equal.
+3. Oldest `lastReviewDate` when both previous values are equal.
+4. Lowest `surahNumber` as the final stable tie-breaker.
+
+The dashboard count represents every due surah. The interface initially displays three due surahs and reveals three more with each **Show more** action. This prevents a large backlog from making the dashboard unnecessarily long.
+
+### Completing a review
+
+Completing a review:
+
+- stores a new `ReviewHistory` record;
+- updates `masteryLevel` and `masteryScore`;
+- stores the completion time in `lastReviewDate`;
+- calculates and stores the new `nextReviewDate`;
+- clears the active review from local storage.
+
+### Unfinished and conflicting reviews
+
+The current review unit ID is stored in local storage under `activeReviewUnitId`. The dashboard restores the unfinished review and displays `ActiveReviewCard`, allowing the user to continue or cancel it.
+
+If the user tries to start a different surah while a review is active, `ReviewConflictModal` offers three choices:
+
+- continue the current review;
+- replace it with the newly selected review;
+- close the modal without changing either selection.
+
+## Dashboard Review Experience
+
+The review section has two modes.
+
+### Suggested reviews
+
+- Shows only surahs whose `nextReviewDate` is due.
+- Uses the multi-step priority order described above.
+- Displays the full due count in the dashboard statistics.
+- Displays due cards vertically and progressively in groups of three.
+- Shows separate states for no memorised surahs and no reviews due today.
+
+### Manual review selection
+
+- Allows early review of any memorised surah.
+- Searches by partial surah name.
+- Filters by juz.
+- Shows only juz numbers represented in the user's saved surahs.
+- Combines the search and juz filters.
+- Orders results by most recently added first.
+- Displays results progressively in groups of five.
+- Resets the visible result count when the search or juz changes.
+- Shows a specific no-matching-results state.
+- Uses the same active-review conflict protection as suggested reviews.
+
+The separate **My Surahs** page remains focused on managing saved data through editing and deletion.
+
+## Verification Status
+
+- [x] Suggested review opens the correct surah
+- [x] Manual review opens the correct surah
+- [x] Partial-name search filters results
+- [x] Juz selection filters results
+- [x] Search and juz filters work together
+- [x] No-result and empty-data states are distinct
+- [x] Suggested reviews expand and collapse correctly
+- [x] Manual results expand and collapse correctly
+- [x] Active-review conflicts display the expected modal
+- [x] Missing `nextReviewDate` is treated as due
+- [x] Production build completes successfully
+
+## Build Note
+
+The production build succeeds. Vite currently reports that a minified chunk exceeds 500 kB. This is a non-blocking performance warning. Bundle analysis and code splitting are deferred to Phase 4 to avoid premature optimisation during the review-engine implementation.
 
 ## Current Focus
 
-The **My Surahs** page currently supports loading, empty, error, list, success, and safe deletion states.
-
-Next planned work:
-
-1. Edit a surah's mastery level.
-2. Edit its memorisation date.
-3. Review the complete page experience on mobile devices.
+Phase 2 is functionally complete for scheduled and manual complete-surah reviews. The next task is to display clear overdue, due-today, and upcoming labels without changing the established priority logic.
