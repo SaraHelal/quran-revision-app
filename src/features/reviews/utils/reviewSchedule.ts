@@ -16,6 +16,8 @@ export function calculateNextReviewDate(
     nextReviewDate.getDate() + REVIEW_INTERVAL_DAYS[masteryLevel],
   );
 
+  nextReviewDate.setHours(0, 0, 0, 0);
+
   return nextReviewDate.toISOString();
 }
 

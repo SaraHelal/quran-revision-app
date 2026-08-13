@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { logout } from "../../../services/firebase/auth";
@@ -8,6 +7,17 @@ import { getUserMemorizationUnits } from "../../memorization/services/memorizati
 import ActiveReviewCard from "../components/ActiveReviewCard";
 import ReviewConflictModal from "../components/ReviewConflictModal";
 import { isReviewDue } from "../../reviews/utils/reviewSchedule";
+import { useEffect, useState } from "react";
+
+function getDateTimestamp(date: string | null | undefined): number {
+  if (!date) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const timestamp = new Date(date).getTime();
+
+  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+}
 
 function DashboardPage() {
   const { user } = useAuth();
@@ -19,6 +29,9 @@ function DashboardPage() {
   // Stores an error message when dashboard data cannot be loaded.
   const [error, setError] = useState("");
 
+  // Tracks the initial Firestore request and prevents premature empty states.
+  const [isLoading, setIsLoading] = useState(true);
+
   // Stores the ID of the review session that is currently in progress.
   const [activeReviewUnitId, setActiveReviewUnitId] = useState<string | null>(
     null,
@@ -29,15 +42,43 @@ function DashboardPage() {
   const [pendingReviewUnitId, setPendingReviewUnitId] = useState<string | null>(
     null,
   );
-
+  const [reviewMode, setReviewMode] = useState<"suggested" | "manual">(
+    "suggested",
+  );
   const userName = user?.displayName || "مستخدمة";
 
-  const prioritySurahs = [...surahs]
+  // Orders every due surah by due date, mastery, last review, then surah number.
+  const dueSurahs = [...surahs]
     .filter((surah) => isReviewDue(surah.nextReviewDate))
-    .sort(
-      (a, b) => MASTERY_SCORES[a.masteryLevel] - MASTERY_SCORES[b.masteryLevel],
-    )
-    .slice(0, 3);
+    .sort((a, b) => {
+      const nextReviewDifference =
+        getDateTimestamp(a.nextReviewDate) - getDateTimestamp(b.nextReviewDate);
+
+      if (nextReviewDifference !== 0) {
+        return nextReviewDifference;
+      }
+
+      const masteryDifference =
+        MASTERY_SCORES[a.masteryLevel] - MASTERY_SCORES[b.masteryLevel];
+
+      if (masteryDifference !== 0) {
+        return masteryDifference;
+      }
+
+      const lastReviewDifference =
+        getDateTimestamp(a.lastReviewDate) - getDateTimestamp(b.lastReviewDate);
+
+      if (lastReviewDifference !== 0) {
+        return lastReviewDifference;
+      }
+
+      return a.surahNumber - b.surahNumber;
+    });
+
+  // Shows every saved surah, with the most recently added first.
+  const manualReviewSurahs = [...surahs].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   // Counts the surahs currently marked as weak.
   const weakSurahsCount = surahs.filter(
@@ -66,6 +107,8 @@ function DashboardPage() {
       } catch (loadError) {
         console.error(loadError);
         setError("حدث خطأ أثناء تحميل السور. حاولي مرة أخرى.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -146,7 +189,7 @@ function DashboardPage() {
           <h1 className="mt-3 text-3xl font-bold">ورد المراجعة اليوم</h1>
 
           <p className="mt-3 text-sm leading-6 opacity-90">
-            تابعي مراجعتك اليومية وحافظي على ما تم حفظه من القرآن الكريم.
+            راجعي ما حان موعده، أو اختاري سورة بنفسكِ للمراجعة.
           </p>
         </div>
 
@@ -162,7 +205,7 @@ function DashboardPage() {
         <div className="mt-5 grid grid-cols-3 gap-3">
           <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
             <p className="text-2xl font-bold text-emerald-700">
-              {prioritySurahs.length}
+              {dueSurahs.length}
             </p>
 
             <p className="mt-1 text-xs text-gray-500">ورد اليوم</p>
@@ -173,7 +216,7 @@ function DashboardPage() {
               {weakSurahsCount}
             </p>
 
-            <p className="mt-1 text-xs text-gray-500">متأخر</p>
+            <p className="mt-1 text-xs text-gray-500">ضعيف</p>
           </div>
 
           <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
@@ -197,9 +240,9 @@ function DashboardPage() {
               <h2 className="text-lg font-bold text-gray-800">مراجعة اليوم</h2>
 
               <span className="mt-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                {prioritySurahs.length === 0
+                {dueSurahs.length === 0
                   ? "لا يوجد ورد"
-                  : `${prioritySurahs.length} سور للمراجعة`}
+                  : `${dueSurahs.length} سور مستحقة`}
               </span>
             </div>
 
@@ -211,9 +254,149 @@ function DashboardPage() {
               + إضافة سورة
             </button>
           </div>
+          {/* Lets the user switch between due and manual reviews. */}
+          <div
+            className="mt-5 grid grid-cols-2 gap-2 rounded-2xl bg-gray-100 p-1"
+            aria-label="طريقة اختيار المراجعة"
+          >
+            <button
+              type="button"
+              aria-pressed={reviewMode === "suggested"}
+              className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${
+                reviewMode === "suggested"
+                  ? "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
+                  : "bg-transparent text-gray-600 hover:bg-white hover:text-emerald-700"
+              }`}
+              onClick={() => setReviewMode("suggested")}
+            >
+              ✨ مقترحة لكِ
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={reviewMode === "manual"}
+              className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${
+                reviewMode === "manual"
+                  ? "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
+                  : "bg-transparent text-gray-600 hover:bg-white hover:text-emerald-700"
+              }`}
+              onClick={() => setReviewMode("manual")}
+            >
+              📖 اختاري سورة
+            </button>
+          </div>
 
           <div className="mt-5">
-            {prioritySurahs.length === 0 ? (
+            {isLoading ? (
+              <div
+                role="status"
+                className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-6 text-center"
+              >
+                <div
+                  className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-600"
+                  aria-hidden="true"
+                />
+
+                <p className="mt-3 text-sm font-bold text-emerald-700">
+                  جارٍ تحميل السور...
+                </p>
+              </div>
+            ) : reviewMode === "suggested" ? (
+              dueSurahs.length === 0 ? (
+                surahs.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
+                    <p className="text-4xl">📖</p>
+
+                    <h3 className="mt-3 font-bold text-gray-800">
+                      لا توجد سور بعد
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-gray-500">
+                      أضيفي أول سورة محفوظة ليبدأ التطبيق في تنظيم ورد المراجعة
+                      اليومي.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={handleAddSurah}
+                      className="mt-5 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                    >
+                      + إضافة سورة
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
+                    <p className="text-4xl">🎉</p>
+
+                    <h3 className="mt-3 font-bold text-gray-800">
+                      لا توجد مراجعات مستحقة اليوم
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-gray-500">
+                      أحسنتِ، لقد أكملتِ مراجعاتك المستحقة.
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div>
+                  <p className="mb-3 text-xs text-gray-500">
+                    اسحبي لعرض جميع السور المستحقة
+                  </p>
+
+                  <div
+                    className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3"
+                    aria-label="السور المستحقة للمراجعة"
+                  >
+                    {dueSurahs.map((surah) => (
+                      <div
+                        key={surah.id}
+                        className="w-[88%] shrink-0 snap-start rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="font-bold text-gray-800">
+                              {surah.surahName}
+                            </h3>
+
+                            <p className="mt-1 text-xs text-gray-500">
+                              الجزء {surah.juzNumber} • سورة رقم{" "}
+                              {surah.surahNumber}
+                            </p>
+                          </div>
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ${
+                              surah.masteryLevel === "weak"
+                                ? "bg-red-100 text-red-700"
+                                : surah.masteryLevel === "good"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            {surah.masteryLevel === "weak"
+                              ? "ضعيف"
+                              : surah.masteryLevel === "good"
+                                ? "جيد"
+                                : "ممتاز"}
+                          </span>
+                        </div>
+
+                        <div className="mt-5 flex justify-start">
+                          <button
+                            type="button"
+                            onClick={() => handleStartReview(surah.id)}
+                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                          >
+                            <span>ابدئي المراجعة</span>
+                            <span aria-hidden="true">←</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : manualReviewSurahs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center">
                 <p className="text-4xl">📖</p>
 
@@ -235,52 +418,77 @@ function DashboardPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {prioritySurahs.map((surah) => (
-                  <div
-                    key={surah.id}
-                    className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-gray-800">
-                          {surah.surahName}
-                        </h3>
+              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-center">
+                <div
+                  className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-sm"
+                  aria-hidden="true"
+                >
+                  📖
+                </div>
 
-                        <p className="mt-1 text-xs text-gray-500">
-                          الجزء {surah.juzNumber} • سورة رقم {surah.surahNumber}
-                        </p>
+                <h3 className="mt-4 font-bold text-gray-800">
+                  اختاري سورة للمراجعة
+                </h3>
+
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
+                  يمكنكِ مراجعة أي سورة محفوظة، حتى إذا لم يحن موعد مراجعتها
+                  بعد.
+                </p>
+                <p className="mt-4 text-xs text-gray-500">
+                  اسحبي لعرض جميع السور المحفوظة
+                </p>
+
+                <div
+                  className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 text-right"
+                  aria-label="السور المتاحة للمراجعة"
+                >
+                  {manualReviewSurahs.map((surah) => (
+                    <div
+                      key={surah.id}
+                      className="w-[88%] shrink-0 snap-start rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-bold text-gray-800">
+                            {surah.surahName}
+                          </h3>
+
+                          <p className="mt-1 text-xs text-gray-500">
+                            الجزء {surah.juzNumber} • سورة رقم{" "}
+                            {surah.surahNumber}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            surah.masteryLevel === "weak"
+                              ? "bg-red-100 text-red-700"
+                              : surah.masteryLevel === "good"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {surah.masteryLevel === "weak"
+                            ? "ضعيف"
+                            : surah.masteryLevel === "good"
+                              ? "جيد"
+                              : "ممتاز"}
+                        </span>
                       </div>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${
-                          surah.masteryLevel === "weak"
-                            ? "bg-red-100 text-red-700"
-                            : surah.masteryLevel === "good"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {surah.masteryLevel === "weak"
-                          ? "ضعيف"
-                          : surah.masteryLevel === "good"
-                            ? "جيد"
-                            : "ممتاز"}
-                      </span>
+                      <div className="mt-5 flex justify-start">
+                        <button
+                          type="button"
+                          onClick={() => handleStartReview(surah.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <span>ابدئي المراجعة</span>
+                          <span aria-hidden="true">←</span>
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="mt-5 flex justify-start">
-                      <button
-                        type="button"
-                        onClick={() => handleStartReview(surah.id)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
-                      >
-                        <span>ابدئي المراجعة</span>
-                        <span aria-hidden="true">←</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
